@@ -1,0 +1,22 @@
+{
+  "name": "agenticseek_nodejs",
+  "version": "1.0.0",
+  "main": "quick-agentic.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "axios": "^1.8.3",
+    "commander": "^13.1.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "fs": "^0.0.1-security",
+    "google-search-results-nodejs": "^2.1.0",
+    "path": "^0.12.7"
+  }
+}

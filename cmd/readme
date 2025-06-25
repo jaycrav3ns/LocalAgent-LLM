@@ -1,5 +1,9 @@
-file: 	Browse files in a directory (e.g., file:.
-web: 		Search the web (e.g., web:JavaScript promises)
-bash: 	Execute bash commands (e.g., bash:echo hello)
+##### Standalone script for using directly with command line workflows.
+To use: move `cmd-agentic.js` up a direcory.  It must be in root directory for accessing `node_modules`.
+
+**Basic commands:**
+file:   Browse files in a directory (e.g., file:.
+web:    Search the web (e.g., web:JavaScript promises)
+bash:   Execute bash commands (e.g., bash:echo hello)
 python: Run Python code (e.g., python:print("Hello"))
-memory: Manage memory (show, clear, save, search_query, last_5)
+memory: Manage with (show, clear, save, search_query, last_5)

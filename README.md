@@ -1,6 +1,6 @@
 # LocalAgent-LLM
 
-**LocalAgent-LLM** is a front-end application for interacting with local Large Language Models (LLMs) via an Ollama endpoint. With LocalAgent-LLM, you can run local chat sessions, execute Bash and Python commands, chain multiple commands, and even search Google—all in a streamlined interface designed for privacy, extensibility, and power-user workflows.
+A modern, full-stack AI coding and research assistant leveraging cutting-edge LLMs, a robust Express/React/TypeScript/Postgres stack, and a highly extensible component system.
 
 <img width="1307" height="664" alt="01" src="https://github.com/user-attachments/assets/fc98d416-0eb6-401b-b620-aa20b65bb589" />
 
@@ -10,103 +10,157 @@
 
 ---
 
-## Features
+## 🚀 Features
 
-- **Local LLM Chat**: Connects to your local Ollama instance for private, fast, and cost-free AI chat.
-- **Run Shell & Python Commands**: Execute Bash and Python directly from the chat, with output visible in your session.
-- **Command Chaining**: Chain commands and instructions together for advanced scripting.
-- **Google Search Integration**: Query Google and use results within your chat flow.
-- **Multi-User Workspaces**: Simple cookie-based isolation so multiple users can work independently.
-- **Dynamic Model Switching**: Detects available Ollama models and lets you switch models with a click.
-- **Session Management**: Start new chats, save memory, and download chat logs with a single click.
-- **Beta**: Actively developed, and open to feedback and improvements.
+- **Next-gen UI**: Built with React, Vite, TailwindCSS, shadcn/ui, and Radix primitives for a beautiful, accessible, and modular interface.
+- **Multi-Workspace Project Management**: Organize, browse, and control files and codebases.
+- **Command/Chat/Memory Tools**: Integrated agent command log, memory, and quick commands.
+- **Live Output**: Real-time rendering of LLM and system responses.
+- **LLM Model Switching**: Easily switch between supported models (Ollama, DeepSeek, etc.).
+- **Authentication**: Local/passport or OIDC support (WIP).
+- **Database**: PostgreSQL via Drizzle ORM, with schema in `/shared/schema.ts`.
+- **Type-safe Sharing**: Shared types and schema between client and server.
+- **API-first**: RESTful Express API with session management.
+- **Component Aliasing**: Clean imports via Vite + tsconfig + shadcn/ui config.
 
 ---
 
-## Getting Started
+## 🛠️ Tech Stack
 
-### Prerequisites
+- **Frontend**: React + Vite + TypeScript
+- **Styling**: TailwindCSS, shadcn/ui, Radix UI, framer-motion, Lucide, FontAwesome
+- **Backend**: Express, TypeScript, REST API, ws (WebSockets)
+- **Database**: PostgreSQL, Drizzle ORM, drizzle-kit migrations
+- **Auth**: passport, passport-local, (OIDC via openid-client)
+- **Other**: axios, zod, TanStack Query, embla-carousel, recharts, etc.
 
-- **Ollama**: A local LLM server is required. See [Ollama documentation](https://ollama.com/) for setup.
-- **Node.js** and **npm** (for running the front-end)
-- (Optional) Python and Bash environments for executing code
+---
 
-### Installation
+## 🗂️ Monorepo Structure
+
+```
+.
+├── client/          # React frontend (Vite, Tailwind, shadcn/ui)
+│   └── src/
+├── server/          # Express backend (TypeScript)
+├── shared/          # Shared types & DB schema (TypeScript)
+├── drizzle/         # Drizzle ORM migration output
+├── dist/            # Build output (production)
+├── attached_assets/ # Static/extra assets (icons, etc)
+├── package.json
+├── tsconfig.json
+├── tailwind.config.ts
+├── vite.config.ts
+└── ...etc
+```
+
+---
+
+## ⚡️ Getting Started
+
+### 1. **Install Dependencies**
 
 ```bash
-git clone https://github.com/jaycrav3ns/LocalAgent-LLM.git
-cd LocalAgent-LLM
 npm install
 ```
 
-### Running Locally
+### 2. **Configure Environment**
 
-1. **Start your Ollama server** (see their documentation).
-2. **Run the LocalAgent-LLM front-end:**
+- Copy and edit `.env` for your database, LLM endpoints, OIDC secrets, etc.
 
-   ```bash
-   npm start
-   ```
+### 3. **Run Migrations**
 
-3. Open your browser and go to `http://localhost:3000` (or the port listed in your console).
+```bash
+npm run migrate
+```
 
----
+### 4. **Start Development**
 
-## Usage
+Runs both backend and frontend in watch mode:
 
-- **Switch Models**: Click the chevron (`ˇ`) next to the model name.
-- **New Chat**: Start a fresh session.
-- **Save Memory**: Save your current conversation state.
-- **Download Chat**: Export your chat log.
+```bash
+npm run dev
+```
 
-### Example Chat Flows
+- Backend: [http://localhost:5000](http://localhost:5000)
+- Frontend: [http://localhost:5173](http://localhost:5173) (proxied API)
 
-- Ask questions, run code snippets, chain commands, or search Google—all from one interface.
+### 5. **Build for Production**
 
----
-
-## Project Overview
-
-This project is a fully functional beta application, purpose-built for [Ollama](https://ollama.com/). The primary technology stack is pure NodeJS, with supporting tools to run Python scripts—though Python is only used for tooling, not as a core part of the stack. The front-end leverages standard HTML, CSS, and JavaScript.
-
-**Key external libraries:**
-- **Font Awesome** (icons)
-- **Tailwind CSS** (utility-first CSS framework)
-- **jQuery** (DOM manipulation)
-- **marked** (Markdown parsing)
-- **SerpAPI** (search API integration)
-
-### Inspiration
-
-The project draws inspiration from [agenticSeek](https://github.com/agenticSeek/agenticseek). It was created as an alternative after encountering issues running agenticSeek without Docker (and a preference to avoid installing Docker). The core concept was refactored from agenticSeek’s codebase into a pure NodeJS implementation.
-
-## Roadmap & Contributing
-
-LocalAgent-LLM is in beta and welcomes feedback, feature requests, and contributions. To get involved:
-
-- Open an issue or feature request
-- Fork the repo and submit a pull request
-- Discuss improvements or ideas
+```bash
+npm run build
+npm start
+```
 
 ---
 
-## License
+## 🧩 Component Aliases
 
-This project is licensed under the [CC0 1.0 Universal License](LICENSE).
+Import paths are aliased for DX:
 
----
+- `@/components`, `@/lib`, `@/hooks`, etc. → `client/src/...`
+- `@shared/*` → `shared/*`
+- `@assets/*` → `attached_assets/*`
 
-## Acknowledgments
-
-- Powered by [Ollama](https://ollama.com/)
-- Inspired by open-source AI and agentic workflows
-
----
-
-## Author
-
-[Jay Crav3ns](https://github.com/jaycrav3ns)
+Configured in `tsconfig.json`, `vite.config.ts`, and `components.json`.
 
 ---
 
-*LocalAgent-LLM: Fast, local, and extensible AI chat at your fingertips.*
+## 🎨 Styling & UI
+
+- **Tailwind**: Uses custom color variables for themes/dark mode.
+- **shadcn/ui**: Modern UI kit (`components.json`).
+- **Radix UI**: Accessible primitives.
+
+---
+
+## 🗃️ Database & ORM
+
+- **Drizzle ORM**: Schema in `shared/schema.ts`
+- **Migrations**: `drizzle-kit` CLI (`npm run migrate`)
+- **Config**: See `drizzle.config.ts`
+
+---
+
+## 🏗️ Scripts
+
+| Script            | Purpose                            |
+|-------------------|------------------------------------|
+| `dev`             | Run client & server in parallel    |
+| `dev:client`      | Frontend only (Vite)              |
+| `dev:server`      | Backend only (Nodemon+TSX)        |
+| `build`           | Build frontend & bundle backend    |
+| `start`           | Run production server              |
+| `migrate`         | Run DB migrations                  |
+| `check`           | TypeScript check                   |
+
+---
+
+## 🧑‍💻 Contributing
+
+1. Fork & clone
+2. `npm install`
+3. PRs welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) if available.
+
+---
+
+## 📂 Related Configs
+
+- **postcss.config.js**: Tailwind + autoprefixer
+- **tailwind.config.ts**: Theme/colors, plugin setup
+- **components.json**: shadcn/ui config
+- **vite.config.ts**: Vite + aliases, proxy, etc.
+- **tsconfig.json**: Paths, strictness, etc.
+- **drizzle.config.ts**: DB config
+
+---
+
+## 🛡️ License
+
+MIT
+
+---
+
+## 💬 Questions?
+
+Open an [issue](https://github.com/jaycrav3ns/LocalAgent-LLM/issues) or [discussions](https://github.com/jaycrav3ns/LocalAgent-LLM/discussions).

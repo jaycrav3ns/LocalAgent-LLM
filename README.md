@@ -2,7 +2,11 @@
 
 **LocalAgent-LLM** is a front-end application for interacting with local Large Language Models (LLMs) via an Ollama endpoint. With LocalAgent-LLM, you can run local chat sessions, execute Bash and Python commands, chain multiple commands, and even search Google—all in a streamlined interface designed for privacy, extensibility, and power-user workflows.
 
-![Screenshot](https://github.com/user-attachments/assets/825c70a0-38b1-4c7f-a58d-95d829e3dede)
+<img width="1307" height="664" alt="01" src="https://github.com/user-attachments/assets/fc98d416-0eb6-401b-b620-aa20b65bb589" />
+
+---
+
+[screenshots/02.png](https://github.com/jaycrav3ns/LocalAgent-LLM/blob/main/screenshots/02.png) | [screenshots/03.png](https://github.com/jaycrav3ns/LocalAgent-LLM/blob/main/screenshots/03.png) | [screenshots/04.png](https://github.com/jaycrav3ns/LocalAgent-LLM/blob/main/screenshots/04.png) | [screenshots/05.png](https://github.com/jaycrav3ns/LocalAgent-LLM/blob/main/screenshots/05.png)
 
 ---
 

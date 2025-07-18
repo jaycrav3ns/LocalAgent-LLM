@@ -25,17 +25,19 @@ router.get('/', async (req: any, res) => {
 // Create new workspace
 router.post('/', async (req: any, res) => {
   try {
-    const { name, description, directory } = req.body;
+    const { name, description } = req.body;
     
-    if (!name || !directory) {
-      return res.status(400).json({ error: 'Name and directory are required' });
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
     }
 
-    // Validate directory exists and is accessible
-    const workspaceFs = new WorkspaceFileSystem(directory);
+    // Create workspace directory under user's folder
+    const directory = await WorkspaceFileSystem.createWorkspaceForUser(
+      req.user.email || req.user.username, 
+      name
+    );
     
-    // Ensure the directory exists
-    await workspaceFs.createDirectory('.');
+    const workspaceFs = new WorkspaceFileSystem(directory);
     
     const [workspace] = await db
       .insert(workspaces)
@@ -43,7 +45,7 @@ router.post('/', async (req: any, res) => {
         userId: req.user.id,
         name,
         description,
-        directory: workspaceFs.getWorkspaceRoot(), // Store absolute path
+        directory: workspaceFs.getWorkspaceRoot(),
       })
       .returning();
 
@@ -119,6 +121,46 @@ router.get('/:id/files/content', async (req: any, res) => {
   } catch (error) {
     console.error('Error reading file:', error);
     res.status(500).json({ error: 'Failed to read file' });
+  }
+});
+
+// Delete workspace
+router.delete('/:id', async (req: any, res) => {
+  try {
+    const workspaceId = req.params.id;
+    
+    const [workspace] = await db
+      .select()
+      .from(workspaces)
+      .where(and(
+        eq(workspaces.id, workspaceId),
+        eq(workspaces.userId, req.user.id)
+      ));
+
+    if (!workspace) {
+      return res.status(404).json({ error: 'Workspace not found' });
+    }
+
+    // Delete from database
+    await db
+      .delete(workspaces)
+      .where(and(
+        eq(workspaces.id, workspaceId),
+        eq(workspaces.userId, req.user.id)
+      ));
+
+    // Optionally delete the directory (be careful with this)
+    // const fs = await import('fs/promises');
+    // try {
+    //   await fs.rmdir(workspace.directory, { recursive: true });
+    // } catch (error) {
+    //   console.warn('Failed to delete workspace directory:', error);
+    // }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting workspace:', error);
+    res.status(500).json({ error: 'Failed to delete workspace' });
   }
 });
 

@@ -40,4 +40,21 @@ export function useCreateWorkspace() {
   });
 }
 
+export function useDeleteWorkspace() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (workspaceId: string) => {
+      const response = await fetch(`/api/workspaces/${workspaceId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete workspace");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspaces"] });
+    },
+  });
+}
+
 

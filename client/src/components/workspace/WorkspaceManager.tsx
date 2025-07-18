@@ -20,17 +20,16 @@ export function WorkspaceManager({ onWorkspaceSelect }: WorkspaceManagerProps) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    directory: "",
   });
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.directory) return;
+    if (!formData.name) return;
     
     try {
       const newWorkspace = await createWorkspace.mutateAsync(formData);
       setIsCreateOpen(false);
-      setFormData({ name: "", description: "", directory: "" });
+      setFormData({ name: "", description: "" });
       
       // Auto-select the new workspace
       if (onWorkspaceSelect) {
@@ -91,20 +90,7 @@ export function WorkspaceManager({ onWorkspaceSelect }: WorkspaceManagerProps) {
     setEditName("");
   };
 
-  const selectFolder = async () => {
-    try {
-      const response = await fetch('/api/files');
-      const result = await response.json();
-      
-      if (result.success) {
-        const currentDir = result.currentPath || '/home/user/projects';
-        setFormData({ ...formData, directory: currentDir });
-      }
-    } catch (error) {
-      console.error('Failed to get directory:', error);
-      setFormData({ ...formData, directory: '/home/user/projects' });
-    }
-  };
+  // selectFolder function removed
 
   const handleExport = async (workspaceId: string) => {
     try {
@@ -158,27 +144,6 @@ export function WorkspaceManager({ onWorkspaceSelect }: WorkspaceManagerProps) {
                   className="bg-[var(--bg-main)] border-gray-600"
                   required
                 />
-              </div>
-              <div>
-                <Label htmlFor="directory">Directory</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="directory"
-                    value={formData.directory}
-                    onChange={(e) => setFormData({ ...formData, directory: e.target.value })}
-                    placeholder="/home/user/projects/my-project"
-                    className="bg-[var(--bg-main)] border-gray-600 flex-1"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={selectFolder}
-                    className="px-3"
-                  >
-                    <FolderOpen className="h-4 w-4" />
-                  </Button>
-                </div>
               </div>
               <div>
                 <Label htmlFor="description">Description (optional)</Label>

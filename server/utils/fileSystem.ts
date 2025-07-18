@@ -2,8 +2,25 @@ import { promises as fs } from 'fs';
 import path from 'path';
 
 export class WorkspaceFileSystem {
+  private static readonly APP_DATA_DIR = path.join(process.cwd(), '.local-agent-workspaces');
+  
   constructor(private workspaceRoot: string) {
     this.workspaceRoot = path.resolve(workspaceRoot);
+  }
+
+  static getUserWorkspaceDir(userEmail: string): string {
+    // Sanitize email for filesystem use
+    const sanitizedEmail = userEmail.replace(/[^a-zA-Z0-9@.-]/g, '_');
+    return path.join(this.APP_DATA_DIR, sanitizedEmail);
+  }
+
+  static async createWorkspaceForUser(userEmail: string, workspaceName: string): Promise<string> {
+    const userDir = this.getUserWorkspaceDir(userEmail);
+    const sanitizedName = workspaceName.replace(/[^a-zA-Z0-9-_]/g, '_');
+    const workspaceDir = path.join(userDir, sanitizedName);
+    
+    await fs.mkdir(workspaceDir, { recursive: true });
+    return workspaceDir;
   }
 
   private validatePath(filePath: string): string {

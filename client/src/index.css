@@ -350,6 +350,30 @@
   border-color: rgba(59, 130, 246, 0.5);
 }
 
-.send-button {
-	margin-top: 0.25rem;
+.workspace-info-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: var(--bg-card);
+  border: 1px solid var(--accent-gold);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.workspace-info-display.inactive {
+  border-color: #6b7280;
+  background: var(--bg-main);
+  color: var(--text-muted);
+}
+
+.workspace-info-display .workspace-name {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.workspace-info-display i {
+  font-size: 0.9rem;
 }

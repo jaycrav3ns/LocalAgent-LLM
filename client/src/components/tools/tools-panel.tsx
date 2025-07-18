@@ -3,6 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useAgent } from "@/hooks/useAgent";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import AddCommandModal from "@/components/modals/add-command-modal";
+import { useTerminal } from "@/contexts/TerminalContext";
 
 type CommandType = 'bash' | 'python';
 
@@ -13,22 +18,21 @@ export default function ToolsPanel() {
     webSearch, 
     clearMemory,
     memory, 
-    quickCommands, 
-    memoryLoading, 
-    commandsLoading 
+    memoryLoading 
   } = useAgent();
   
+  const { toast } = useToast();
   const [commandType, setCommandType] = useState<CommandType>('bash');
   const [commandInput, setCommandInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [memorySearchQuery, setMemorySearchQuery] = useState("");
-  const [output, setOutput] = useState<string[]>([]);
+  const { output, addOutput, clearOutput } = useTerminal();
 
   const executeCommand = async () => {
     if (!commandInput.trim()) return;
 
     const timestamp = new Date().toLocaleTimeString();
-    setOutput(prev => [...prev, `[${timestamp}] > ${commandInput}`]);
+    addOutput(`[${timestamp}] > ${commandInput}`);
 
     try {
       let result;
@@ -38,54 +42,28 @@ export default function ToolsPanel() {
         result = await executePython.mutateAsync(commandInput);
       }
 
-      setOutput(prev => [...prev, result.success ? result.output : `Error: ${result.error}`]);
+      addOutput(result.success ? result.output : `Error: ${result.error}`);
     } catch (error) {
-      setOutput(prev => [...prev, `Error: ${error}`]);
+      addOutput(`Error: ${error}`);
     }
 
     setCommandInput("");
-  };
-
-  const executeQuickCommand = async (command: any) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setOutput(prev => [...prev, `[${timestamp}] > ${command.command}`]);
-
-    try {
-      let result;
-      if (command.type === 'bash') {
-        result = await executeBash.mutateAsync(command.command);
-      } else if (command.type === 'python') {
-        result = await executePython.mutateAsync(command.command);
-      } else if (command.type === 'web') {
-        result = await webSearch.mutateAsync(command.command);
-      }
-
-      if (result) {
-        setOutput(prev => [...prev, result.success ? result.output : `Error: ${result.error}`]);
-      }
-    } catch (error) {
-      setOutput(prev => [...prev, `Error: ${error}`]);
-    }
   };
 
   const performWebSearch = async () => {
     if (!searchQuery.trim()) return;
 
     const timestamp = new Date().toLocaleTimeString();
-    setOutput(prev => [...prev, `[${timestamp}] > web search: ${searchQuery}`]);
+    addOutput(`[${timestamp}] > web search: ${searchQuery}`);
 
     try {
       const result = await webSearch.mutateAsync(searchQuery);
-      setOutput(prev => [...prev, result.success ? result.output : `Error: ${result.error}`]);
+      addOutput(result.success ? result.output : `Error: ${result.error}`);
     } catch (error) {
-      setOutput(prev => [...prev, `Error: ${error}`]);
+      addOutput(`Error: ${error}`);
     }
 
     setSearchQuery("");
-  };
-
-  const clearOutput = () => {
-    setOutput([]);
   };
 
   const handleClearMemory = async () => {
@@ -98,55 +76,53 @@ export default function ToolsPanel() {
 
   return (
     <div className="p-6 space-y-6 h-full overflow-y-auto scrollbar-thin">
-      {/* Quick Commands */}
+      {/* Live Output - Now at the top like a real terminal */}
       <div className="neumorphic rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold flex items-center text-[var(--text-primary)]">
-            <i className="fas fa-bolt text-yellow-400 mr-3"></i>
-            Quick Commands
+            <i className="fas fa-terminal text-green-400 mr-3"></i>
+            Terminal Output
           </h3>
-          <Button 
-            className="bg-primary hover:bg-primary/80"
+          <Button
+            variant="outline"
             size="sm"
+            onClick={clearOutput}
+            className="border-gray-600 hover:bg-gray-600"
           >
-            <i className="fas fa-plus mr-2"></i>Add Command
+            <i className="fas fa-broom mr-1"></i>Clear
           </Button>
         </div>
         
-        {commandsLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="loading-spinner w-6 h-6 border-2 border-primary border-t-transparent rounded-full"></div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {quickCommands?.map((command: any) => (
-              <div 
-                key={command.id}
-                className="bg-[var(--bg-main)] rounded-lg p-4 border border-gray-600 hover:border-primary transition-colors cursor-pointer"
-                onClick={() => executeQuickCommand(command)}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium text-[var(--text-primary)]">{command.name}</h4>
-                  <i className={`fas ${
-                    command.type === 'bash' ? 'fa-terminal text-primary' :
-                    command.type === 'python' ? 'fa-python text-green-400' :
-                    'fa-search text-blue-400'
-                  }`}></i>
-                </div>
-                <p className="text-sm text-[var(--text-muted)] mb-3">
-                  {command.type}: {command.command}
-                </p>
-                <Button
-                  size="sm"
-                  className="bg-primary bg-opacity-20 hover:bg-opacity-30 text-xs"
-                  disabled={isLoading}
+        <div className="bg-[var(--bg-main)] rounded-lg p-4 command-output text-sm min-h-64 max-h-80 overflow-y-auto scrollbar-thin border border-gray-600">
+          {output.length === 0 ? (
+            <div className="text-center text-[var(--text-muted)] py-8">
+              <i className="fas fa-terminal text-2xl mb-2"></i>
+              <p>Terminal ready - execute commands below to see output</p>
+              <p className="text-xs mt-1">Commands from the Commands tab will also appear here</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {output.map((line, index) => (
+                <div 
+                  key={index} 
+                  className={`${
+                    line.startsWith('>') ? 'text-green-400' : 
+                    line.startsWith('Error:') ? 'text-red-400' :
+                    'text-[var(--text-secondary)]'
+                  }`}
                 >
-                  Execute
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
+                  {line}
+                </div>
+              ))}
+              {isLoading && (
+                <div className="flex items-center space-x-2 mt-2">
+                  <div className="loading-spinner w-4 h-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                  <span className="text-yellow-400">Processing...</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Command Execution and Memory Management */}
@@ -154,8 +130,8 @@ export default function ToolsPanel() {
         {/* Terminal Interface */}
         <div className="neumorphic rounded-xl p-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center text-[var(--text-primary)]">
-            <i className="fas fa-terminal text-green-400 mr-3"></i>
-            Command Terminal
+            <i className="fas fa-code text-blue-400 mr-3"></i>
+            Command Interface
           </h3>
           
           <div className="space-y-4">
@@ -186,6 +162,12 @@ export default function ToolsPanel() {
                 className="bg-[var(--bg-main)] border-gray-600 command-output resize-none focus:border-primary"
                 placeholder="Enter command..."
                 disabled={isLoading}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    executeCommand();
+                  }
+                }}
               />
               <Button
                 className="absolute bottom-3 right-3 bg-primary hover:bg-primary/80"
@@ -206,6 +188,12 @@ export default function ToolsPanel() {
                   placeholder="Search query..."
                   className="bg-[var(--bg-main)] border-gray-600 focus:border-primary"
                   disabled={isLoading}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      performWebSearch();
+                    }
+                  }}
                 />
                 <Button
                   onClick={performWebSearch}
@@ -295,54 +283,6 @@ export default function ToolsPanel() {
               </Button>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Live Output */}
-      <div className="neumorphic rounded-xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold flex items-center text-[var(--text-primary)]">
-            <i className="fas fa-play-circle text-green-400 mr-3"></i>
-            Live Output
-          </h3>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={clearOutput}
-            className="border-gray-600 hover:bg-gray-600"
-          >
-            <i className="fas fa-broom mr-1"></i>Clear
-          </Button>
-        </div>
-        
-        <div className="bg-[var(--bg-main)] rounded-lg p-4 command-output text-sm max-h-64 overflow-y-auto scrollbar-thin border border-gray-600">
-          {output.length === 0 ? (
-            <div className="text-center text-[var(--text-muted)] py-8">
-              <i className="fas fa-terminal text-2xl mb-2"></i>
-              <p>Output will appear here when you execute commands</p>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {output.map((line, index) => (
-                <div 
-                  key={index} 
-                  className={`${
-                    line.startsWith('>') ? 'text-green-400' : 
-                    line.startsWith('Error:') ? 'text-red-400' :
-                    'text-[var(--text-secondary)]'
-                  }`}
-                >
-                  {line}
-                </div>
-              ))}
-              {isLoading && (
-                <div className="flex items-center space-x-2 mt-2">
-                  <div className="loading-spinner w-4 h-4 border-2 border-primary border-t-transparent rounded-full"></div>
-                  <span className="text-yellow-400">Processing...</span>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </div>

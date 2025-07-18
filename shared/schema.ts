@@ -7,6 +7,8 @@ import {
   index,
   serial,
   boolean,
+  uuid,
+  integer,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -75,6 +77,106 @@ export const quickCommands = pgTable("quick_commands", {
   type: varchar("type").notNull(), // 'bash', 'python', 'web'
   description: text("description"),
   isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// NEW WORKSPACE TABLES
+export const workspaces = pgTable("workspaces", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  directory: text("directory").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  meta: jsonb("meta"),
+});
+
+export const chats = pgTable("chats", {
+  id: serial("id").primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id),
+  messages: jsonb("messages").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const contexts = pgTable("contexts", {
+  id: serial("id").primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id),
+  type: text("type").notNull(),
+  content: jsonb("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const commands = pgTable("commands", {
+  id: serial("id").primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id),
+  name: text("name").notNull(),
+  command: text("command").notNull(),
+  type: text("type"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const bookmarks = pgTable("bookmarks", {
+  id: serial("id").primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id),
+  path: text("path").notNull(),
+  label: text("label"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const memory = pgTable("memory", {
+  id: serial("id").primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id),
+  key: text("key").notNull(),
+  value: jsonb("value").notNull(),
+  tags: text("tags"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const history = pgTable("history", {
+  id: serial("id").primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id),
+  eventType: text("event_type").notNull(),
+  data: jsonb("data").notNull(),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const tools = pgTable("tools", {
+  id: serial("id").primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  schema: jsonb("schema").notNull(),
+  handler: text("handler").notNull(),
+  category: text("category"),
+  enabled: boolean("enabled").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const toolCalls = pgTable("tool_calls", {
+  id: serial("id").primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id),
+  toolId: integer("tool_id").references(() => tools.id),
+  toolName: text("tool_name").notNull(),
+  input: jsonb("input").notNull(),
+  output: jsonb("output"),
+  success: boolean("success").notNull(),
+  duration: integer("duration"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const toolResults = pgTable("tool_results", {
+  id: serial("id").primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id),
+  toolCallId: integer("tool_call_id").references(() => toolCalls.id),
+  key: text("key").notNull(),
+  value: jsonb("value").notNull(),
+  expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

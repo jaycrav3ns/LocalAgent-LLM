@@ -214,7 +214,7 @@ export default function ChatInterface({
             <Button
               type="submit"
               disabled={!input.trim() || chat.isPending}
-              className="bg-primary hover:bg-primary/80 px-6 send-button"
+              className="bg-primary hover:bg-primary/80 px-6"
             >
               {chat.isPending ? (
                 <div className="loading-spinner w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>

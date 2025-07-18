@@ -14,9 +14,9 @@ export class LocalAgent {
   private googleSearchKey: string;
 
   constructor() {
-    this.ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434";
+    this.ollamaUrl = process.env.OLLAMA_URL || "http://192.168.0.24:11434";
     this.defaultModel = "deepseek-r1:latest";
-    this.googleSearchKey = process.env.GOOGLE_SEARCH_API_KEY || "your-serp-api-search-key-here";
+    this.googleSearchKey = process.env.GOOGLE_SEARCH_API_KEY || "40e2780aa7b737be581053a3956630a5a1a448bce5b6f548239ba53a7c47c2b3";
   }
 
   async chat(message: string, model?: string): Promise<ToolResult> {

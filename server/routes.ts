@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./localAuth";
 import { agent } from "./agent";
 import { z } from "zod";
+import workspaceRoutes from './routes/workspaces';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -353,6 +354,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch available models" });
     }
   });
+
+  // Add workspace routes to your existing routes
+  app.get('/api/workspaces', isAuthenticated, async (req: any, res) => {
+    try {
+      const workspaces = await storage.getUserWorkspaces(req.user.id);
+      res.json(workspaces);
+    } catch (error) {
+      console.error("Error fetching workspaces:", error);
+      res.status(500).json({ error: "Failed to fetch workspaces" });
+    }
+  });
+
+  app.post('/api/workspaces', isAuthenticated, async (req: any, res) => {
+    try {
+      const { name, description, directory } = req.body;
+      
+      if (!name || !directory) {
+        return res.status(400).json({ error: 'Name and directory are required' });
+      }
+
+      const workspace = await storage.createWorkspace({
+        userId: req.user.id,
+        name,
+        description,
+        directory
+      });
+      res.json(workspace);
+    } catch (error) {
+      console.error("Error creating workspace:", error);
+      res.status(500).json({ error: "Failed to create workspace" });
+    }
+  });
+
+  app.get('/api/workspaces/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const workspace = await storage.getWorkspace(req.params.id, req.user.id);
+      if (!workspace) {
+        return res.status(404).json({ error: 'Workspace not found' });
+      }
+      res.json(workspace);
+    } catch (error) {
+      console.error("Error fetching workspace:", error);
+      res.status(500).json({ error: "Failed to fetch workspace" });
+    }
+  });
+
+  // Add directory browsing endpoint
+  app.get('/api/directories', isAuthenticated, async (req: any, res) => {
+    try {
+      const path = req.query.path || process.cwd();
+      const fs = await import('fs/promises');
+      const pathModule = await import('path');
+      
+      const entries = await fs.readdir(path, { withFileTypes: true });
+      const directories = entries
+        .filter(entry => entry.isDirectory())
+        .map(entry => ({
+          name: entry.name,
+          path: pathModule.join(path, entry.name)
+        }));
+      
+      res.json({ 
+        currentPath: path,
+        directories 
+      });
+    } catch (error) {
+      console.error("Error browsing directories:", error);
+      res.status(500).json({ error: "Failed to browse directories" });
+    }
+  });
+
+  app.use('/api/workspaces', isAuthenticated, workspaceRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

@@ -4,6 +4,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
+    "migrate:generate": "drizzle-kit generate",
     "migrate": "drizzle-kit push",
     "dev:server": "nodemon --exec tsx server/index.ts",
     "dev:client": "vite",

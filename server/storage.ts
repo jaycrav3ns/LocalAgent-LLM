@@ -1,12 +1,13 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
-import pg from 'pg';
 import { eq, ilike, desc, or, and } from 'drizzle-orm';
 import drizzleConfig from '../drizzle.config.js';
+import pg from 'pg';
 import {
   users,
   chatSessions,
   agentMemory,
   quickCommands,
+  workspaces,
   type User,
   type UpsertUser,
   type ChatSession,
@@ -15,7 +16,8 @@ import {
   type InsertAgentMemory,
   type QuickCommand,
   type InsertQuickCommand,
-} from "@shared/schema";
+  type Workspace,
+} from "../shared/schema";
 
 const { Pool } = pg;
 
@@ -44,6 +46,24 @@ export interface IStorage {
   createQuickCommand(command: InsertQuickCommand): Promise<QuickCommand>;
   updateQuickCommand(id: number, updates: Partial<QuickCommand>): Promise<QuickCommand>;
   deleteQuickCommand(id: number): Promise<void>;
+
+  // Workspace operations
+  createWorkspace(data: {
+    userId: string;
+    name: string;
+    description?: string;
+    directory: string;
+    meta?: any;
+  }): Promise<Workspace>;
+  getUserWorkspaces(userId: string): Promise<Workspace[]>;
+  getWorkspace(id: string, userId: string): Promise<Workspace | undefined>;
+  updateWorkspace(id: string, userId: string, data: Partial<{
+    name: string;
+    description: string;
+    directory: string;
+    meta: any;
+  }>): Promise<Workspace>;
+  deleteWorkspace(id: string, userId: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -244,6 +264,37 @@ export class MemStorage implements IStorage {
   async deleteQuickCommand(id: number): Promise<void> {
     this.quickCommands.delete(id);
   }
+
+  async createWorkspace(data: {
+    userId: string;
+    name: string;
+    description?: string;
+    directory: string;
+    meta?: any;
+  }): Promise<Workspace> {
+    throw new Error('Workspaces are not supported in MemStorage');
+  }
+
+  async getUserWorkspaces(userId: string): Promise<Workspace[]> {
+    throw new Error('Workspaces are not supported in MemStorage');
+  }
+
+  async getWorkspace(id: string, userId: string): Promise<Workspace | undefined> {
+    throw new Error('Workspaces are not supported in MemStorage');
+  }
+
+  async updateWorkspace(id: string, userId: string, data: Partial<{
+    name: string;
+    description: string;
+    directory: string;
+    meta: any;
+  }>): Promise<Workspace> {
+    throw new Error('Workspaces are not supported in MemStorage');
+  }
+
+  async deleteWorkspace(id: string, userId: string): Promise<void> {
+    throw new Error('Workspaces are not supported in MemStorage');
+  }
 }
 
 // Database configuration - reuse drizzle config
@@ -272,6 +323,9 @@ pool.connect((err, client, release) => {
 });
 
 const db = drizzle(pool);
+
+// Export the db instance
+export { db };
 
 export class DrizzleStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
@@ -460,6 +514,55 @@ export class DrizzleStorage implements IStorage {
 
   async deleteQuickCommand(id: number): Promise<void> {
     await db.delete(quickCommands).where(eq(quickCommands.id, id));
+  }
+
+  async createWorkspace(data: {
+    userId: string;
+    name: string;
+    description?: string;
+    directory: string;
+    meta?: any;
+  }): Promise<Workspace> {
+    const [workspace] = await db
+      .insert(workspaces)
+      .values(data)
+      .returning();
+    return workspace;
+  }
+
+  async getUserWorkspaces(userId: string): Promise<Workspace[]> {
+    return db
+      .select()
+      .from(workspaces)
+      .where(eq(workspaces.userId, userId));
+  }
+
+  async getWorkspace(id: string, userId: string): Promise<Workspace | undefined> {
+    const [workspace] = await db
+      .select()
+      .from(workspaces)
+      .where(and(eq(workspaces.id, id), eq(workspaces.userId, userId)));
+    return workspace;
+  }
+
+  async updateWorkspace(id: string, userId: string, data: Partial<{
+    name: string;
+    description: string;
+    directory: string;
+    meta: any;
+  }>): Promise<Workspace> {
+    const [workspace] = await db
+      .update(workspaces)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(workspaces.id, id), eq(workspaces.userId, userId)))
+      .returning();
+    return workspace;
+  }
+
+  async deleteWorkspace(id: string, userId: string): Promise<void> {
+    await db
+      .delete(workspaces)
+      .where(and(eq(workspaces.id, id), eq(workspaces.userId, userId)));
   }
 }
 

@@ -2,7 +2,7 @@
 
 A modern, full-stack AI coding and research assistant leveraging cutting-edge LLMs, a robust Express/React/TypeScript/Postgres stack, and a highly extensible component system.
 
-<img width="1307" height="664" alt="01" src="https://github.com/user-attachments/assets/fc98d416-0eb6-401b-b620-aa20b65bb589" />
+<img width="1304" height="694" alt="01" src="https://github.com/user-attachments/assets/a96dc65b-ee64-4235-90a1-6a39747d3f25" />
 
 ---
 

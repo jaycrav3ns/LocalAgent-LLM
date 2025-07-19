@@ -15,11 +15,16 @@ interface FileItem {
   path: string;
 }
 
+const truncatePath = (path: string, maxLength: number = 50) => {
+  if (path.length <= maxLength) return path;
+  return '...' + path.slice(-(maxLength - 3));
+};
+
 export function WorkspaceViewer({ workspaceId, onClose }: WorkspaceViewerProps) {
   const [currentPath, setCurrentPath] = useState(".");
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
-  const { data: workspace } = useQuery({
+  const { data: workspace, isLoading: workspaceLoading, error: workspaceError } = useQuery({
     queryKey: ["workspace", workspaceId],
     queryFn: async () => {
       const response = await fetch(`/api/workspaces/${workspaceId}`);
@@ -49,6 +54,32 @@ export function WorkspaceViewer({ workspaceId, onClose }: WorkspaceViewerProps) 
     enabled: !!workspaceId && !!selectedFile,
   });
 
+  // Move all conditional returns after hooks
+  if (workspaceLoading) {
+    return (
+      <div className="p-6 text-center">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-gray-500">Loading workspace...</p>
+      </div>
+    );
+  }
+
+  if (workspaceError) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-red-500">Error loading workspace: {workspaceError.message}</p>
+      </div>
+    );
+  }
+
+  if (!workspace) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-gray-500">No workspace found</p>
+      </div>
+    );
+  }
+
   const files: FileItem[] = filesResult?.files || [];
 
   const handleFileClick = (file: FileItem) => {
@@ -75,20 +106,14 @@ export function WorkspaceViewer({ workspaceId, onClose }: WorkspaceViewerProps) 
     return <File className="h-4 w-4 text-gray-400" />;
   };
 
-  if (!workspace) {
-    return (
-      <div className="p-6 text-center">
-        <p className="text-gray-500">No workspace selected</p>
-      </div>
-    );
-  }
-
   return (
     <div className="p-6 h-full">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-semibold">{workspace.name}</h2>
-          <p className="text-sm text-gray-500">{workspace.directory}</p>
+          <p className="text-sm text-gray-500 mb-2" title={workspace.directory}>
+            {truncatePath(workspace.directory)}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()}>

@@ -54,6 +54,30 @@ router.post('/', async (req: any, res) => {
   }
 });
 
+// Get single workspace
+router.get('/:id', async (req: any, res) => {
+  try {
+    const workspaceId = req.params.id;
+    
+    const [workspace] = await db
+      .select()
+      .from(workspaces)
+      .where(and(
+        eq(workspaces.id, workspaceId),
+        eq(workspaces.userId, req.user.id)
+      ));
+
+    if (!workspace) {
+      return res.status(404).json({ error: 'Workspace not found' });
+    }
+
+    res.json(workspace);
+  } catch (error) {
+    console.error('Error fetching workspace:', error);
+    res.status(500).json({ error: 'Failed to fetch workspace' });
+  }
+});
+
 // Get workspace files
 router.get('/:id/files', async (req: any, res) => {
   try {

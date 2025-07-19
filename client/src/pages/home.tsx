@@ -301,7 +301,11 @@ export default function Home() {
                   onClose={() => setSelectedWorkspace("")}
                 />
               ) : activeTab === 'workspace' ? (
-                <WorkspaceManager onWorkspaceSelect={setSelectedWorkspace} />
+                <WorkspaceManager onWorkspaceSelect={(id) => {
+                  setSelectedWorkspace(id);
+                  // Ensure we stay on workspace tab
+                  setActiveTab('workspace');
+                }} />
               ) : null}
             </div>
           

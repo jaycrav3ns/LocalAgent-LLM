@@ -37,15 +37,13 @@ router.post('/', async (req: any, res) => {
       name
     );
     
-    const workspaceFs = new WorkspaceFileSystem(directory);
-    
     const [workspace] = await db
       .insert(workspaces)
       .values({
         userId: req.user.id,
         name,
         description,
-        directory: workspaceFs.getWorkspaceRoot(),
+        directory,
       })
       .returning();
 

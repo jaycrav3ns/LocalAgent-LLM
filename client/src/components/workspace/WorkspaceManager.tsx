@@ -11,8 +11,13 @@ interface WorkspaceManagerProps {
   onWorkspaceSelect?: (workspaceId: string) => void;
 }
 
+const truncatePath = (path: string, maxLength: number = 50) => {
+  if (path.length <= maxLength) return path;
+  return '...' + path.slice(-(maxLength - 3));
+};
+
 export function WorkspaceManager({ onWorkspaceSelect }: WorkspaceManagerProps) {
-  const { data: workspaces, isLoading } = useWorkspaces();
+  const { data: workspaces, isLoading, refetch } = useWorkspaces();
   const createWorkspace = useCreateWorkspace();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingWorkspace, setEditingWorkspace] = useState<string | null>(null);
@@ -30,6 +35,9 @@ export function WorkspaceManager({ onWorkspaceSelect }: WorkspaceManagerProps) {
       const newWorkspace = await createWorkspace.mutateAsync(formData);
       setIsCreateOpen(false);
       setFormData({ name: "", description: "" });
+      
+      // Force refresh the workspaces list
+      await refetch();
       
       // Auto-select the new workspace
       if (onWorkspaceSelect) {
@@ -219,7 +227,9 @@ export function WorkspaceManager({ onWorkspaceSelect }: WorkspaceManagerProps) {
                       </>
                     )}
                   </div>
-                  <p className="text-sm text-gray-500 mb-2">{ws.directory}</p>
+                  <p className="text-sm text-gray-500 mb-2" title={ws.directory}>
+                    {truncatePath(ws.directory)}
+                  </p>
                   {ws.description && (
                     <p className="text-sm text-gray-600 mb-3">{ws.description}</p>
                   )}

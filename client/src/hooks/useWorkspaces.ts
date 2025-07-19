@@ -25,7 +25,7 @@ export function useWorkspaces() {
 export function useCreateWorkspace() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { name: string; description?: string; directory: string }) => {
+    mutationFn: async (data: { name: string; description?: string }) => {
       const response = await fetch("/api/workspaces", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -1,0 +1,80 @@
+import { marked } from 'marked';
+import { useState } from 'react';
+
+interface MarkdownRendererProps {
+  content: string;
+  messageId: number;
+  onCopyCode: (codeContent: string, messageId: number) => void;
+  onDownloadCode: (codeContent: string, messageId: number) => void;
+  copiedMessageId: number | null;
+}
+
+export default function MarkdownRenderer({
+  content,
+  messageId,
+  onCopyCode,
+  onDownloadCode,
+  copiedMessageId,
+}: MarkdownRendererProps) {
+  const tokens = marked.lexer(content);
+  const elements: JSX.Element[] = [];
+  let currentText = '';
+
+  tokens.forEach((token, tokenIndex) => {
+    if (token.type === 'code') {
+      if (currentText) {
+        elements.push(
+          <div
+            key={`text-${tokenIndex}`}
+            className="prose prose-sm max-w-none text-[var(--text-secondary)] mb-3"
+            dangerouslySetInnerHTML={{ __html: marked.parser(marked.lexer(currentText)) }}
+          />
+        );
+        currentText = '';
+      }
+      elements.push(
+        <div key={`code-${tokenIndex}`} className="not-prose relative group">
+          <pre className="code-block max-w-none text-[var(--text-secondary)] mb-3">
+            <code>{token.text}</code>
+            <div className="absolute top-2 right-2 p-1 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <button 
+                onClick={() => onDownloadCode(token.text, messageId)}
+                className="text-gray-400 hover:text-white bg-gray-700/50 rounded-md p-1"
+                title="Download Code"
+              >
+                <i className="fas fa-download"></i>
+              </button>
+              <button 
+                onClick={() => onCopyCode(token.text, messageId)}
+                className="text-gray-400 hover:text-white bg-gray-700/50 rounded-md p-1"
+                title="Copy Code"
+              >
+                {copiedMessageId === messageId ? (
+                  <i className="fas fa-check"></i>
+                ) : (
+                  <i className="fas fa-copy"></i>
+                )}
+              </button>
+            </div>
+          </pre>
+        </div>
+      );
+    } else if (token.type === 'codespan') {
+      currentText += `<code>${token.raw.replace(/`/g, '')}</code>`;
+    } else {
+      currentText += token.raw;
+    }
+  });
+
+  if (currentText) {
+    elements.push(
+      <div
+        key={`text-final`}
+        className="prose prose-sm max-w-none text-[var(--text-secondary)] mb-3"
+        dangerouslySetInnerHTML={{ __html: marked.parser(marked.lexer(currentText)) }}
+      />
+    );
+  }
+
+  return <>{elements}</>;
+}

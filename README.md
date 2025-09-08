@@ -32,6 +32,8 @@ LocalAgent-LLM is a full-stack TypeScript application designed as a powerful loc
 - **Secure authentication and user management**
 - **Tabbed interface for Chat, History, Workspace, Commands, and Tools**
 
+Detailed overview: <a href="https://github.com/jaycrav3ns/LocalAgent-LLM/wiki">HERE</a>
+
 ---
 
 ## Architecture

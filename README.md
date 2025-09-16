@@ -8,193 +8,157 @@ LocalAgent-LLM is a full-stack TypeScript application designed as a powerful loc
 
 ---
 
-## Table of Contents
+## 🚀 Features
 
-- [Features](#features)
-- [Architecture](#architecture)
-- [How It Works](#how-it-works)
-- [Key Components](#key-components)
-- [Getting Started](#getting-started)
-- [Tool System Explained](#tool-system-explained)
-- [Directory Structure](#directory-structure)
-- [Contributing](#contributing)
-- [License](#license)
-
----
-
-## Features
-
-- **Modern React SPA Frontend**
-- **Node.js/Express Backend**
-- **Integrated PostgreSQL database (via Drizzle ORM)**
-- **Ollama LLM integration for local AI chat**
-- **Tool system for code execution, file management, OCR, and more**
-- **Secure authentication and user management**
-- **Tabbed interface for Chat, History, Workspace, Commands, and Tools**
-
-Detailed overview: <a href="https://github.com/jaycrav3ns/LocalAgent-LLM/wiki">HERE</a>
+- **Next-gen UI**: Built with React, Vite, TailwindCSS, shadcn/ui, and Radix primitives for a beautiful, accessible, and modular interface.
+- **Multi-Workspace Project Management**: Organize, browse, and control files and codebases.
+- **Command/Chat/Memory Tools**: Integrated agent command log, memory, and quick commands.
+- **Live Output**: Real-time rendering of LLM and system responses.
+- **LLM Model Switching**: Easily switch between supported models (Ollama API or Gemini API Key).
+- **Authentication**: Local/passport or OIDC support (WIP).
+- **Database**: PostgreSQL via Drizzle ORM, with schema in `/shared/schema.ts`.
+- **Type-safe Sharing**: Shared types and schema between client and server.
+- **API-first**: RESTful Express API with session management.
+- **Component Aliasing**: Clean imports via Vite + tsconfig + shadcn/ui config.
 
 ---
 
-## Architecture
+## 🛠️ Tech Stack
 
-LocalAgent-LLM is composed of three main parts:
-
-1. **Frontend (`client/`)**  
-   Built with React and Vite for fast development and production-ready builds.
-
-2. **Backend**  
-   Node.js server handling API requests, authentication, database, and AI/tool orchestration.
-
-3. **Shared Logic (`shared/`)**  
-   TypeScript code shared between frontend and backend, including database schema definitions.
+- **Frontend**: React + Vite + TypeScript
+- **Styling**: TailwindCSS, shadcn/ui, Radix UI, framer-motion, Lucide, FontAwesome
+- **Backend**: Express, TypeScript, REST API, ws (WebSockets)
+- **Database**: PostgreSQL, Drizzle ORM, drizzle-kit migrations
+- **Auth**: passport, passport-local, (OIDC via openid-client)
+- **Other**: axios, zod, TanStack Query, embla-carousel, recharts, etc.
 
 ---
 
-## How It Works
-
-- **Frontend:**  
-  The React SPA (in `client/`) communicates with the backend via REST API. Routing is handled by `wouter` and authentication via a custom hook. TanStack Query manages async data fetching and caching for a responsive UI.
-
-- **Backend:**  
-  Exposes REST endpoints for authentication, chat, command execution, and workspace management. Uses Drizzle ORM for safe, type-checked database operations on PostgreSQL.
-
-- **AI Agent:**  
-  The backend proxies requests to a locally running Ollama instance (`OLLAMA_URL` in `.env`). The agent can "think," use external tools, and incorporate outputs from shell scripts, OCR, and more into its chat responses.
-
----
-
-## Key Components
-
-### Tool System
-
-The heart of LocalAgent-LLM is its extensible tool system:
-
-- **Tool Manifest (`shared/toolTypes.ts`):**  
-  Defines the structure of each tool (name, description, input/output schemas, handler).
-
-- **Tool Implementations (`server/tools/*`):**  
-  Actual logic for tools like filesystem access, OCR, and custom scripts.
-
-- **Tool Registry (`server/tools/registry.ts`):**  
-  Central list of all available tools, imported by orchestrator and API endpoints.
-
-- **Tool Orchestrator (`server/orchestrator.ts`):**  
-  Function for executing tools by name and returning results to the agent.
-
-- **Tool API (`server/routes/tools.ts`):**  
-  Endpoint for tool discovery (metadata only, not executable code).
-
-- **Shell Scripts (`server/scripts/*`):**  
-  Custom scripts dynamically registered as tools.
-
-### Database (PostgreSQL & Drizzle)
-
-- **Schema definitions** in TypeScript (`shared/schema.ts`)
-- **Migrations** generated via Drizzle Kit (`drizzle/`)
-- **Type-safe querying** in backend
-
-### Ollama Integration
-
-- **Local LLM model** for private, fast AI responses
-- **Backend** acts as proxy and orchestrator for tool-augmented prompts
-
----
-
-## Getting Started
-
-> **Prerequisites:**  
-> - Node.js
-> - PostgreSQL
-> - [Ollama](https://ollama.com/) running locally
-
-1. **Clone the repository**
-   ```sh
-   git clone https://github.com/jaycrav3ns/LocalAgent-LLM.git
-   cd LocalAgent-LLM
-   ```
-
-2. **Set up environment variables**
-   - Copy `.env.example` to `.env`
-   - Fill out your PostgreSQL and Ollama configuration
-
-3. **Install dependencies**
-   ```sh
-   npm install
-   cd client && npm install
-   cd ..
-   ```
-
-4. **Run database migrations**
-   ```sh
-   npx drizzle-kit migrate:push
-   ```
-
-5. **Start the backend**
-   ```sh
-   npm run dev
-   ```
-
-6. **Start the frontend**
-   ```sh
-   cd client
-   npm run dev
-   ```
-
----
-
-## Tool System Explained
-
-The tool system allows the LLM agent to call external functions, such as shell commands, OCR, or custom scripts, as part of its reasoning. This is achieved through:
-
-1. **Tool Registration:**  
-   All tool manifests are imported and registered in the tool registry.
-
-2. **Tool Discovery:**  
-   The agent queries the `/tools` API for available tool descriptions and schemas.
-
-3. **Tool Execution:**  
-   The agent selects and invokes a tool by name via the orchestrator, receiving results for further reasoning.
-
-4. **Security:**  
-   Tools run in a sandboxed environment (with workspace root restrictions).
-
-**Example:**  
-The agent receives a prompt like `bash: ls -l`. The backend executes `ls -l` in a shell, captures the output, and returns it to the agent, which can then use it in its next response.
-
----
-
-## Directory Structure
+## 🗂️ Monorepo Structure
 
 ```
-LocalAgent-LLM/
-│
-├── client/             # React frontend (Vite)
-│   ├─ src/
-│   ├─ public/
-│   └─ ...
-│
-├── server/             # Node.js backend
-│   ├─ tools/           # Tool implementations
-│   ├─ routes/          # Express routes
-│   ├─ orchestrator.ts  # Tool orchestrator
-│   └─ ...
-│
-├── shared/             # Shared TypeScript logic (schemas, types)
-│
-├── drizzle/            # Database migrations
-├── .env.example        # Sample environment config
-└── README.md
+.
+├── client/          # React frontend (Vite, Tailwind, shadcn/ui)
+│   └── src/
+├── server/          # Express backend (TypeScript)
+├── shared/          # Shared types & DB schema (TypeScript)
+├── drizzle/         # Drizzle ORM migration output
+├── dist/            # Build output (production)
+├── attached_assets/ # Static/extra assets (icons, etc)
+├── package.json
+├── tsconfig.json
+├── tailwind.config.ts
+├── vite.config.ts
+└── ...etc
 ```
 
 ---
 
-## Contributing
+## ⚡️ Getting Started
 
-Pull requests, issues, and suggestions are welcome! Please open an issue or PR and describe your proposed changes or bugfixes.
+### 1. **Install Dependencies**
+
+```bash
+npm install
+```
+
+### 2. **Configure Environment**
+
+- Copy and edit `.env` for your database, LLM endpoints, OIDC secrets, etc.
+
+### 3. **Run Migrations**
+
+```bash
+npm run migrate
+```
+
+### 4. **Start Development**
+
+Runs both backend and frontend using `concurrently` + `nodemon`:
+
+```bash
+npm run dev
+```
+
+- Backend: [http://localhost:5000](http://localhost:5000)
+- Frontend: [http://localhost:5173](http://localhost:5173) (proxied API)
+
+### 5. **Build for Production**
+
+```bash
+npm run build
+npm start
+```
 
 ---
 
-## License
+## 🧩 Component Aliases
 
-CC (see LICENSE file)
+Import paths are aliased for DX:
+
+- `@/components`, `@/lib`, `@/hooks`, etc. → `client/src/...`
+- `@shared/*` → `shared/*`
+- `@assets/*` → `attached_assets/*`
+
+Configured in `tsconfig.json`, `vite.config.ts`, and `components.json`.
+
+---
+
+## 🎨 Styling & UI
+
+- **Tailwind**: Uses custom color variables for themes/dark mode.
+- **shadcn/ui**: Modern UI kit (`components.json`).
+- **Radix UI**: Accessible primitives.
+
+---
+
+## 🗃️ Database & ORM
+
+- **Drizzle ORM**: Schema in `shared/schema.ts`
+- **Migrations**: `drizzle-kit` CLI (`npm run migrate`)
+- **Config**: See `drizzle.config.ts`
+
+---
+
+## 🏗️ Scripts
+
+| Script            | Purpose                            |
+|-------------------|------------------------------------|
+| `dev`             | Run client & server in parallel    |
+| `dev:client`      | Frontend only (Vite)              |
+| `dev:server`      | Backend only (Nodemon+TSX)        |
+| `build`           | Build frontend & bundle backend    |
+| `start`           | Run production server              |
+| `migrate`         | Run DB migrations                  |
+| `check`           | TypeScript check                   |
+
+---
+
+## 🧑‍💻 Contributing
+
+1. Fork & clone
+2. `npm install`
+3. PRs welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) if available.
+
+---
+
+## 📂 Related Configs
+
+- **postcss.config.js**: Tailwind + autoprefixer
+- **tailwind.config.ts**: Theme/colors, plugin setup
+- **components.json**: shadcn/ui config
+- **vite.config.ts**: Vite + aliases, proxy, etc.
+- **tsconfig.json**: Paths, strictness, etc.
+- **drizzle.config.ts**: DB config
+
+---
+
+## 🛡️ License
+
+MIT
+
+---
+
+## 💬 Questions?
+
+Open an [issue](https://github.com/jaycrav3ns/LocalAgent-LLM/issues) or [discussions](https://github.com/jaycrav3ns/LocalAgent-LLM/discussions).

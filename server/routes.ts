@@ -60,9 +60,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ error: 'Chat session not found' });
         }
       } else {
+        const systemPrompt = "You are a code generation assistant. You will be given a prompt and you should only reply with the generated code. Do not include any explanations, introductions, or any other text that is not code.";
+        let chatTitle = message;
+        if (message.startsWith(systemPrompt)) {
+          chatTitle = message.substring(systemPrompt.length).trim();
+        }
+
         session = await storage.createChatSession({
           userId,
-          title: message.substring(0, 50) + "...",
+          title: chatTitle.substring(0, 50) + "...",
           model: model || "deepseek-r1:latest",
           messages: []
         });
@@ -76,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       // Process message with agent
-      const result = await agent.chat(message, model);
+      const result = await agent.chat(message, model, user);
       
       // Add assistant response
       const assistantMessage = {

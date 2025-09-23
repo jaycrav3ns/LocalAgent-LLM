@@ -50,7 +50,7 @@ export const treeSimpleTool: ToolManifest = {
   async handler({ dir }, context) {
     // -J = JSON, -n = no color, -L 2 = max depth 2 (optional, remove for full)
     const workspaceRoot = context.workspaceRoot;
-    const tree = await runTreeJson(dir, ["-J", "-n"], workspaceRoot);
+    const tree = await runTreeJson(dir, ["-J", "-L", "1"], workspaceRoot);
 
     // Optionally strip unneeded fields for "simple" mode
     function simplify(node: any): any {
@@ -94,7 +94,7 @@ export const treeExtendedTool: ToolManifest = {
     const workspaceRoot = context.workspaceRoot;
     const tree = await runTreeJson(
       dir,
-      ["-J", "-n", "-p", "-s"],
+      ["-J", "-L", "1", "-p", "-s"],
       workspaceRoot
     );
 
@@ -126,17 +126,75 @@ export const treeFullTool: ToolManifest = {
     "List files and directories (full mode: all available metadata, dirs first, totals, etc).",
   inputSchema: z.object({ dir: z.string() }),
   outputSchema: z.object({
-    tree: z.array(z.any()), // full tree as output by tree -Jvsp --du --dirsfirst
+    tree: z.array(z.any()), // full tree as output by tree -Jsp -L 1 --du --dirsfirst
   }),
   async handler({ dir }, context) {
     // -J = JSON, -v = version sort, -s = size, -p = perms, --du = show dir disk usage, --dirsfirst
     const workspaceRoot = context.workspaceRoot;
     const tree = await runTreeJson(
       dir,
-      ["-J", "-v", "-s", "-p", "--du", "--dirsfirst"],
+      ["-J", "-L", "1", "-s", "-p", "--du", "--dirsfirst"],
       workspaceRoot
     );
     // No filtering: raw tree output
     return { tree };
   },
 };
+
+// --- Start of runnable script block ---
+
+// This allows the script to be run directly for testing, e.g., via "tsx server/tools/tree.ts simple ."
+// It checks if the script path in the command arguments matches the actual module path.
+const initializeTestRunner = async () => {
+    const runnerArg = process.argv[2];
+    const validCommands = ["simple", "extended", "full"];
+
+    if (validCommands.includes(runnerArg)) {
+        await runCli();
+    }
+};
+
+const runCli = async () => {
+    const args = process.argv.slice(2); // Args are [type, directory]
+    if (args.length !== 2) {
+        console.error("Usage: tsx server/tools/tree.ts <type> <directory>");
+        console.error("  type: simple, extended, or full");
+        console.error("  directory: path relative to the project root");
+        process.exit(1);
+    }
+
+    const [toolType, dir] = args;
+
+    const context = {
+        workspaceRoot: process.cwd(), // Assume script is run from project root
+    };
+
+    let tool;
+    switch (toolType) {
+        case "simple":
+            tool = treeSimpleTool;
+            break;
+        case "extended":
+            tool = treeExtendedTool;
+            break;
+        case "full":
+            tool = treeFullTool;
+            break;
+        default:
+            console.error(`Unknown tool type: ${toolType}`);
+            console.error("Available types: simple, extended, full");
+            process.exit(1);
+    }
+
+    try {
+        console.log(`Running ${tool.name} on directory: "${dir}"...`);
+        const result = await tool.handler({ dir }, context as any);
+        console.log(JSON.stringify(result, null, 2));
+    } catch (error) {
+        console.error("Error executing tool:", error);
+        process.exit(1);
+    }
+};
+
+initializeTestRunner();
+// --- End of runnable script block ---

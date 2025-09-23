@@ -389,8 +389,13 @@ export class DrizzleStorage implements IStorage {
   }
 
   async updateUserPreferences(id: string, preferences: any): Promise<User> {
+    const user = await this.getUser(id);
+    if (!user) throw new Error('User not found');
+
     const { directory, ...prefs } = preferences;
-    const updateData: Partial<User> = { preferences: prefs, updatedAt: new Date() };
+    const newPreferences = { ...(user.preferences as object || {}), ...prefs };
+
+    const updateData: Partial<User> = { preferences: newPreferences, updatedAt: new Date() };
 
     if (directory) {
       updateData.directory = directory;

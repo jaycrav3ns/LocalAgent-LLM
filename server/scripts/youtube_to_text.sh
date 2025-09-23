@@ -16,6 +16,8 @@ fi
 # Output subs as plaintext
 sed '/^$/d' "$(ls -1 *.srt | head -1)" | grep -v -- '-->' | \
 awk '!/^[0-9]+$/' | tr -d '\r' | \
-awk '!seen[$0]++' | tr '\n' ' ' > "${user_output}" && rm *.srt
+awk '!seen[$0]++' | tr '\n' ' ' | \
+    iconv -t utf-8 | \
+    jq -sR '{ "youtube": { "text": . } }' && rm *.srt
 
 exit 0

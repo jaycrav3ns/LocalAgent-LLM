@@ -13,17 +13,32 @@ export class LocalAgent {
   private defaultModel: string;
   private googleSearchKey: string;
   private geminiApiKey?: string;
+  private openRouterApiKeys?: { [model: string]: string };
 
   constructor() {
     this.ollamaUrl = process.env.OLLAMA_URL || "http://192.168.0.24:11434";
     this.defaultModel = "deepseek-r1:latest";
     this.googleSearchKey = process.env.GOOGLE_SEARCH_API_KEY || "40e2780aa7b737be581053a3956630a5a1a448bce5b6f548239ba53a7c47c2b3";
     this.geminiApiKey = process.env.GEMINI_API_KEY;
+    // this.openRouterApiKeys will be set from user preferences
   }
 
-  async chat(message: string, model?: string): Promise<ToolResult> {
+  async chat(message: string, model?: string, user?: any): Promise<ToolResult> {
+    if (user && user.preferences) {
+      if (user.preferences.geminiApiKey) {
+        this.geminiApiKey = user.preferences.geminiApiKey;
+      }
+      if (user.preferences.openRouterApiKeys) {
+        this.openRouterApiKeys = user.preferences.openRouterApiKeys;
+      }
+    }
+
     if (model && model.startsWith("gemini")) {
       return this.chatWithGemini(message, model);
+    }
+
+    if (model && model.includes('/')) { // A simple way to detect openrouter models
+      return this.chatWithOpenRouter(message, model);
     }
 
     const systemPrompt = `
@@ -56,6 +71,44 @@ Please use these tools to answer the user's questions and perform tasks.
         success: false,
         output: "",
         error: error.response?.data?.error || error.message
+      };
+    }
+  }
+
+  async chatWithOpenRouter(message: string, model: string): Promise<ToolResult> {
+    if (!this.openRouterApiKeys?.[model]) {
+      return {
+        success: false,
+        output: "",
+        error: `OpenRouter API key not provided for model ${model}.`
+      };
+    }
+
+    try {
+      const response = await axios.post(`https://openrouter.ai/api/v1/chat/completions`,
+        {
+          model: model,
+          messages: [
+            { role: "user", content: message }
+          ]
+        },
+        {
+          headers: {
+            "Authorization": `Bearer ${this.openRouterApiKeys[model]}`,
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+
+      return {
+        success: true,
+        output: response.data.choices[0].message.content
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        output: "",
+        error: error.response?.data?.error?.message || error.message
       };
     }
   }
@@ -246,21 +299,39 @@ Please use these tools to answer the user's questions and perform tasks.
     }
   }
 
-  async getAvailableModels(user?: { preferences?: { geminiApiKey?: string } }): Promise<ToolResult> {
-    let models: string[] = [];
+  async getAvailableModels(user?: { preferences?: { geminiApiKey?: string; openRouterApiKeys?: { [model: string]: string } } }): Promise<ToolResult> {
+    if (user && user.preferences) {
+      if (user.preferences.geminiApiKey) {
+        this.geminiApiKey = user.preferences.geminiApiKey;
+      }
+      if (user.preferences.openRouterApiKeys) {
+        this.openRouterApiKeys = user.preferences.openRouterApiKeys;
+      }
+    }
+
+    let localModels: string[] = [];
     try {
       const response = await axios.get(`${this.ollamaUrl}/api/tags`);
-      models = response.data.models?.map((model: any) => model.name) || [];
+      localModels = response.data.models?.map((model: any) => model.name) || [];
     } catch (error) {
       console.error("Could not connect to Ollama server:", error);
     }
 
-    if (this.geminiApiKey) {
-      models.push("gemini-pro");
-      models.push("gemini-2.0-flash");
-      models.push("gemini-1.5-pro-latest");
-    }
-    
+    const geminiModels: string[] = this.geminiApiKey ? [
+      "gemini-pro",
+      "gemini-2.0-flash",
+      "gemini-1.5-pro-latest",
+      "gemini-1.5-flash"
+    ] : [];
+
+    const openRouterModels: string[] = this.openRouterApiKeys ? Object.keys(this.openRouterApiKeys) : [];
+
+    const models = {
+      local: localModels,
+      gemini: geminiModels,
+      openrouter: openRouterModels
+    };
+
     return {
       success: true,
       output: JSON.stringify(models)

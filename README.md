@@ -4,7 +4,7 @@ LocalAgent-LLM is a full-stack TypeScript application designed as a powerful loc
 
 <img width="1325" height="720" alt="01" src="https://github.com/user-attachments/assets/f903c9d6-66b0-4137-a52e-21c173caaf46" />
 
-<a href="https://github.com/jaycrav3ns/LocalAgent-LLM/tree/main/screenshots">Additional screenshots here</a>
+<a href="https://github.com/jaycrav3ns/LocalAgent-LLM/tree/main/screenshots">Additional screenshots</a> | <a href="https://github.com/jaycrav3ns/LocalAgent-LLM/wiki">Detailed overview</a>
 
 ---
 
@@ -14,7 +14,7 @@ LocalAgent-LLM is a full-stack TypeScript application designed as a powerful loc
 - **Multi-Workspace Project Management**: Organize, browse, and control files and codebases.
 - **Command/Chat/Memory Tools**: Integrated agent command log, memory, and quick commands.
 - **Live Output**: Real-time rendering of LLM and system responses.
-- **LLM Model Switching**: Easily switch between supported models (Ollama API or Gemini API Key).
+- **LLM Model Switching**: Easily switch between supported models (Ollama, Gemini and OpenRouter API Keys).
 - **Authentication**: Local/passport or OIDC support (WIP).
 - **Database**: PostgreSQL via Drizzle ORM, with schema in `/shared/schema.ts`.
 - **Type-safe Sharing**: Shared types and schema between client and server.
@@ -120,6 +120,12 @@ Configured in `tsconfig.json`, `vite.config.ts`, and `components.json`.
 
 ---
 
+**Default account:**<br>
+ - Username: `user@localhost`<br>
+ - Password: `password123`
+
+---
+
 ## 🏗️ Scripts
 
 | Script            | Purpose                            |
@@ -138,7 +144,7 @@ Configured in `tsconfig.json`, `vite.config.ts`, and `components.json`.
 
 1. Fork & clone
 2. `npm install`
-3. PRs welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) if available.
+3. PRs welcome!
 
 ---
 

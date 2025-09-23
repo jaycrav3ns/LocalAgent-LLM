@@ -105,17 +105,13 @@ export default function AuthPage() {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Bot className="h-8 w-8 text-primary" />
+            <div className="flex items-center justify-center mb-4 space-x-4">
+              <div className="p-1 bg-primary/10 rounded-lg">
+		            <img src="/favicon.svg" alt="Chat Bot" className="w-12 h-12" />
               </div>
+              <h1 className="text-2xl font-bold text-foreground">LocalAgent LLM</h1>
             </div>
-            <h1 className="text-2xl font-bold text-foreground">LocalAgent LLM</h1>
-            <p className="text-muted-foreground mt-2">
-              Your intelligent development companion
-            </p>
           </div>
-
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
@@ -192,9 +188,6 @@ export default function AuthPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Create Account</CardTitle>
-                  <CardDescription>
-                    Set up your local development workspace
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">

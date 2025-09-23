@@ -20,8 +20,9 @@ import { useQuery } from "@tanstack/react-query";
 import CommandsPanel from "@/components/commands/CommandsPanel";
 import ToolsPanel from "@/components/tools/tool-box";
 import { TerminalProvider } from "@/contexts/TerminalContext";
+import EditorPage from "@/pages/editor"; // Import the new editor page
 
-type Tab = 'chat' | 'workspace' | 'tools' | 'history';
+type Tab = 'chat' | 'workspace' | 'tools' | 'history' | 'editor';
 
 interface User {
   displayName?: string;
@@ -46,13 +47,14 @@ interface ChatSession {
 export default function Home() {
   const { user, isLoading, logout, isLoggingOut } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'chat' | 'history' | 'workspace' | 'commands' | 'tools'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'history' | 'workspace' | 'commands' | 'tools' | 'editor'>('chat');
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [showModelModal, setShowModelModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [selectedWorkspace, setSelectedWorkspace] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [editorContent, setEditorContent] = useState("");
 
   
 
@@ -282,6 +284,12 @@ export default function Home() {
               >
                 Toolbox
               </button>
+              <button 
+                className={`tab-btn ${activeTab === 'editor' ? 'active' : ''}`}
+                onClick={() => setActiveTab('editor')}
+              >
+                Editor
+              </button>
               <span className="tab-spacer"></span>
               <button 
                 className="tab-btn help-btn mb-1"
@@ -327,8 +335,11 @@ export default function Home() {
             <div className={`tab-content ${activeTab === 'commands' ? 'active' : ''} flex-1 overflow-y-auto`}>
               {activeTab === 'commands' && <CommandsPanel />}
             </div>
-            <div className={`tab-content ${activeTab === 'tools' ? 'active' : ''} flex-1 overflow-y-auto p-4`}>
+            <div className={`tab-content ${activeTab === 'tools' ? 'active' : ''} flex-1 overflow-y-auto scrollbar-thin p-4`}>
               {activeTab === 'tools' && <ToolsPanel />}
+            </div>
+            <div className={`tab-content ${activeTab === 'editor' ? 'active' : ''} flex-1 overflow-y-auto`}>
+              {activeTab === 'editor' && <EditorPage editorContent={editorContent} setEditorContent={setEditorContent} />}
             </div>
           </div>
         </div>

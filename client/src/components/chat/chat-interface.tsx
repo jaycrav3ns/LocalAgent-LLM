@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from 'react-markdown';
-import useSpeechToText from 'react-hook-speech-to-text';
 import { useAgent } from "@/hooks/useAgent";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { ReusableChatInput } from "./ReusableChatInput"; // Import the new reusable component
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -31,64 +31,13 @@ export default function ChatInterface({
   const { user } = useAuth();
   const { chat } = useAgent();
   const { toast } = useToast();
-  const [input, setInput] = useState("");
-  const [showMenu, setShowMenu] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  const {
-    error,
-    interimResult,
-    isRecording,
-    results,
-    startSpeechToText,
-    stopSpeechToText,
-  } = useSpeechToText({
-    continuous: true,
-    useLegacyResults: false,
-    crossBrowser: true,
-    speechRecognitionProperties: {
-      interimResults: true,
-    },
-    googleApiKey: import.meta.env.VITE_GOOGLE_API_KEY,
-  });
-
-  useEffect(() => {
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Voice Input Error",
-        description: error,
-      });
-    }
-  }, [error, toast]);
-
-  useEffect(() => {
-    const lastResult = results[results.length - 1];
-    if (lastResult?.transcript) {
-      setInput(prevInput => prevInput.trim() ? prevInput + ' ' + lastResult.transcript.trim() : lastResult.transcript.trim());
-    }
-  }, [results]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -97,8 +46,7 @@ export default function ChatInterface({
     return () => clearTimeout(timer);
   }, [messages]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (input: string) => {
     if (!input.trim() || chat.isPending) return;
 
     const userMessage: Message = {
@@ -108,7 +56,6 @@ export default function ChatInterface({
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setInput("");
 
     try {
       const result = await chat.mutateAsync({
@@ -148,13 +95,6 @@ export default function ChatInterface({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
-  };
-
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString('en-US', {
       hour: 'numeric',
@@ -189,12 +129,12 @@ export default function ChatInterface({
     </code>
   );
 
-  const CodeBlock = ({ children, ...props }: any) => {
+  const CodeBlock = ({ children, className, ...props }: any) => {
     const messageId = props.messageId;
     const codeContent = String(children).replace(/\n$/, ''); // Extract and trim trailing newline
     return (
       <div className="relative group">
-        <pre className="code-block max-w-none text-[var(--text-secondary)] mb-3">
+        <pre className={`code-block max-w-none mb-3 ${className}`}>
           <code>{children}</code>
           <div className="absolute top-2 right-4 p-1 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <button
@@ -221,17 +161,6 @@ export default function ChatInterface({
     );
   };
 
-  const toggleListening = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setShowMenu(false);
-    if (isRecording) {
-      stopSpeechToText();
-    } else {
-      setInput('');
-      startSpeechToText();
-    }
-  };
-
   return (
     <div className="h-full flex flex-col relative">
       {/* Chat Messages Area */}
@@ -250,7 +179,22 @@ export default function ChatInterface({
             {msg.role === 'user' && (
               <div className="flex justify-end">
                 <div className="max-w-3xl bg-primary rounded-2xl px-4 py-3">
-                  <p className="text-white whitespace-pre-wrap">{msg.content}</p>
+                  <div className="prose prose-invert max-w-none text-white">
+                  <ReactMarkdown
+                    components={{
+                      pre: ({ children }) => children,
+                      code: ({ node, className, children, ...props }) => {
+                        if (className || String(children).includes('\n')) {
+                          return <CodeBlock {...props} messageId={index} className="text-white">{children}</CodeBlock>;
+                        }
+                        const code = String(children).replace(/`/g, '');
+                        return <InlineCode>{code}</InlineCode>;
+                      }
+                    }}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
+                </div>
                   <div className="text-xs text-blue-200 mt-2">{formatTime(msg.timestamp)}</div>
                 </div>
               </div>
@@ -269,7 +213,7 @@ export default function ChatInterface({
                         pre: ({ children }) => children,
                         code: ({ node, className, children, ...props }) => {
                           if (className || String(children).includes('\n')) {
-                            return <CodeBlock {...props} messageId={index}>{children}</CodeBlock>;
+                            return <CodeBlock {...props} messageId={index} className="text-[var(--text-secondary)]">{children}</CodeBlock>;
                           }
                           const code = String(children).replace(/`/g, '');
                           return <InlineCode>{code}</InlineCode>;
@@ -326,60 +270,12 @@ export default function ChatInterface({
       </div>
 
       {/* Chat Input */}
-      <div className="chat-input-container absolute bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700">
-        <div className="chat-input-row">
-          <div className="menu-wrap" ref={menuRef}>
-            <ul className="menu">
-              <li className="menu-item">
-                <button className="menu-button text-[var(--text-primary)] font-medium hover:bg-[var(--input-dark)]" onClick={() => setShowMenu(!showMenu)}>
-                  <i className="fa-solid fa-chevron-up ml-3"></i>
-                </button>
-                <ul className="drop-menu" style={{ visibility: showMenu ? 'visible' : 'hidden', opacity: showMenu ? 1 : 0, transform: showMenu ? 'translateY(0)' : 'translateY(10px)' }}>
-                  <li className="drop-menu-item">
-                    <a href="#" onClick={onNewChat}><i className="fa-solid fa-comment"></i>New Chat</a>
-                  </li>
-                  <li className="drop-menu-item">
-                    <a href="#" onClick={onAddDocument}><i className="fa-solid fa-paperclip"></i>Add File</a>
-                  </li>
-                  <li className="drop-menu-item">
-                    <a href="#" onClick={toggleListening} title={error ? "Speech recognition not supported" : (isRecording ? "Stop listening" : "Start voice input")}>
-                      {isRecording ? (
-                        <><i className="fa-solid fa-microphone-slash text-red-500"></i><span className="ml-2">Stop Listening</span></>
-                      ) : (
-                        <><i className={`fa-solid fa-microphone ${error ? 'text-gray-500' : ''}`}></i><span className="ml-2">Voice Input</span></>
-                      )}
-                    </a>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-          </div>
-
-					<textarea
-			          ref={textareaRef}
-			          className="chat-textarea scrollbar-thin"
-			          placeholder={interimResult || "Type a prompt..."}
-			          rows={1}
-			          value={input}
-			          onChange={(e) => setInput(e.target.value)}
-			          onKeyDown={handleKeyDown}
-			          disabled={chat.isPending}
-			        ></textarea>
-
-			        <button
-			          className="send-button font-medium hover:bg-[var(--input-dark)]"
-			          onClick={handleSubmit}
-			          disabled={!input.trim() || chat.isPending}
-			        >
-			          {chat.isPending ? (
-			            <div className="loading-spinner w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-			          ) : (
-			            <i className="fa-solid fa-paper-plane ml-2"></i>
-			          )}
-			        </button>
-        </div>
-      </div>
+      <ReusableChatInput 
+        onSubmit={handleSubmit}
+        isSubmitting={chat.isPending}
+        onNewChat={onNewChat}
+        onAddDocument={onAddDocument}
+      />
     </div>
   );
-
 }

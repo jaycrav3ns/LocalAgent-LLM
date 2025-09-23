@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
+import { Input } from "@/components/ui/input";
 
 interface ChatSession {
   id: number;
@@ -24,6 +25,7 @@ export default function ChatHistory({ onResumeChat, onDownloadChat }: ChatHistor
   const { user } = useAuth();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -79,6 +81,19 @@ export default function ChatHistory({ onResumeChat, onDownloadChat }: ChatHistor
     return firstUserMessage?.content.substring(0, 100) + "..." || "No messages";
   };
 
+  const filteredSessions = sessions.filter(session => {
+    const title = session.title || `Chat ${session.id}`;
+    const preview = getPreview(session.messages);
+    const model = session.model;
+    const searchText = searchTerm.toLowerCase();
+
+    return (
+      title.toLowerCase().includes(searchText) ||
+      preview.toLowerCase().includes(searchText) ||
+      model.toLowerCase().includes(searchText)
+    );
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -99,7 +114,16 @@ export default function ChatHistory({ onResumeChat, onDownloadChat }: ChatHistor
 
   return (
     <div className="chat-history">
-      <div className="overflow-x-auto">
+      <div className="p-2">
+        <Input
+          type="text"
+          placeholder="Search by title, preview, or model..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full"
+        />
+      </div>
+      <div className="overflow-x-auto scrollbar-thin">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-600">
@@ -112,8 +136,8 @@ export default function ChatHistory({ onResumeChat, onDownloadChat }: ChatHistor
             </tr>
           </thead>
           <tbody>
-            {sessions.map((session) => (
-              <tr key={session.id} className="border-b border-gray-700 hover:bg-gray-800/50">
+            {filteredSessions.map((session) => (
+              <tr key={session.id} className="border-b border-gray-700 hover:bg-gray-800/50 even:bg-card">
                 <td className="py-3 px-2">
                   <div className="font-medium text-[var(--text-primary)]">
                     {session.title || `Chat ${session.id}`}
@@ -125,7 +149,7 @@ export default function ChatHistory({ onResumeChat, onDownloadChat }: ChatHistor
                   </div>
                 </td>
                 <td className="py-3 px-2">
-                  <span className="bg-primary/20 text-primary px-2 py-1 rounded text-xs">
+                  <span className="bg-primary/20 text-[skyblue] px-2 py-1 rounded text-xs">
                     {session.model}
                   </span>
                 </td>
@@ -164,6 +188,11 @@ export default function ChatHistory({ onResumeChat, onDownloadChat }: ChatHistor
             ))}
           </tbody>
         </table>
+        {filteredSessions.length === 0 && searchTerm.length > 0 && (
+          <div className="text-center py-8">
+            <p className="text-[var(--text-muted)]">No sessions found for "{searchTerm}"</p>
+          </div>
+        )}
       </div>
     </div>
   );

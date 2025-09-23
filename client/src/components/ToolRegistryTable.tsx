@@ -68,26 +68,25 @@ export const ToolRegistryTable: React.FC<Props> = ({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-600">
-            <th className="text-left py-3 px-2 text-[var(--text-muted)]">Enabled</th>
-            <th className="text-left py-3 px-2 text-[var(--text-muted)]">Name</th>
-            <th className="text-left py-3 px-2 text-[var(--text-muted)]">Description</th>
-            
-            <th className="text-left py-3 px-2 text-[var(--text-muted)]">Actions</th>
+            <th className="text-left py-2 px-2 text-[var(--text-muted)]">Enabled</th>
+            <th className="text-left py-2 px-2 text-[var(--text-muted)]">Name</th>
+            <th className="text-left py-2 px-2 text-[var(--text-muted)]">Description</th>
+            <th className="text-left py-2 px-2 text-[var(--text-muted)]">Actions</th>
           </tr>
         </thead>
         <tbody>
           {Array.isArray(tools) && tools.map((tool) => (
-            <tr key={tool.name} className="border-b border-gray-700 hover:bg-gray-800/50">
-              <td className="py-3 px-2">
+            <tr key={tool.name} className="border-b border-gray-700 hover:bg-gray-800/50 even:bg-card">
+              <td className="py-2 px-2">
                 <Switch
                   checked={tool.enabled}
                   onCheckedChange={() => handleToggle(tool)}
                 />
               </td>
-              <td className="py-3 px-2 font-medium text-[var(--text-primary)]">{tool.name}</td>
-              <td className="py-3 px-2 text-[var(--text-muted)] max-w-sm truncate">{tool.description}</td>
+              <td className="py-2 px-2 font-medium text-[var(--text-primary)]">{tool.name}</td>
+              <td className="py-2 px-2 text-[var(--text-muted)] max-w-sm truncate">{tool.description}</td>
               
-              <td className="py-3 px-2">
+              <td className="py-2 px-2">
                 <div className="flex gap-2">
                   <Button variant="ghost" size="sm" onClick={() => onEdit(tool)}><i className="fas fa-pencil-alt"></i></Button>
                   <Button variant="ghost" size="sm" onClick={() => onDelete(tool)} className="text-red-500 hover:text-red-400"><i className="fas fa-trash"></i></Button>

@@ -1,14 +1,18 @@
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAgent } from "@/hooks/useAgent";
 import { useTerminal } from "@/contexts/TerminalContext";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 
-export default function CommandTerminal() {
+interface CommandTerminalProps {
+  commandInput: string;
+  setCommandInput: (value: string) => void;
+}
+
+export default function CommandTerminal({ commandInput, setCommandInput }: CommandTerminalProps) {
   const { executeBash, executePython, webSearch, userBaseDir } = useAgent();
   const { output, addOutput, clearOutput } = useTerminal();
   const { currentWorkspace } = useWorkspace();
-  const [commandInput, setCommandInput] = useState("");
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const commandInputRef = useRef<HTMLTextAreaElement>(null);
@@ -112,19 +116,21 @@ export default function CommandTerminal() {
           onChange={(e) => setCommandInput(e.target.value)}
           onKeyDown={handleCommandKeyDown}
           placeholder={userBaseDir ? "Enter command..." : "Loading user directory..."}
-          className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-4 py-2 pr-12 resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent command-input-textarea"
+          className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-4 py-2 pr-24 resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent command-input-textarea"
           rows={1}
           disabled={!userBaseDir || isLoading}
         />
-			<Button
-          variant="ghost"
-          size="icon"
-          onClick={clearOutput}
-          className="absolute right-2 top-1/2 -translate-y-1/2 mt-[-0.25rem] bg-[var(--input-light)] border border-[#777] rounded-full z-10 text-[var(--text-muted)] hover:bg-[var(--primary-dark)] scale-95 hover:scale-105 transition-all w-8 h-8"
-          title="Clear Terminal"
-        >
-          <i className="fas fa-eraser"></i>
-        </Button>
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 mt-[-0.25rem] flex gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={clearOutput}
+            className="bg-[var(--input-light)] border border-[#777] rounded-full z-10 text-[var(--text-muted)] hover:bg-[var(--primary-dark)] scale-95 hover:scale-105 transition-all w-8 h-8"
+            title="Clear Terminal"
+          >
+            <i className="fas fa-trash-alt"></i>
+          </Button>
+        </div>
       </div>
     </div>
   );

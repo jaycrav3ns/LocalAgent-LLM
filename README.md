@@ -2,7 +2,7 @@
 
 LocalAgent-LLM is a full-stack TypeScript application designed as a powerful local AI assistant. It enables you to chat with a Large Language Model (LLM), execute code, manage files, and leverage custom tools—all from a clean, tabbed web interface.
 
-<img width="1316" height="708" alt="00" src="https://github.com/user-attachments/assets/ffa0fce1-d438-4e0e-a291-6b87fc07b577" />
+<img width="1325" height="720" alt="01" src="https://github.com/user-attachments/assets/f903c9d6-66b0-4137-a52e-21c173caaf46" />
 
 <a href="https://github.com/jaycrav3ns/LocalAgent-LLM/tree/main/screenshots">Additional screenshots here</a>
 

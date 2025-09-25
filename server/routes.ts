@@ -46,7 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
-      const { message, model, sessionId } = req.body;
+      const { message, model, sessionId, reasoning } = req.body;
       
       if (!message) {
         return res.status(400).json({ error: 'Message is required' });
@@ -74,15 +74,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Add user message
       const userMessage = {
         role: 'user' as const,
         content: message,
         timestamp: new Date().toISOString()
       };
+      session.messages.push(userMessage);
 
       // Process message with agent
-      const result = await agent.chat(message, model, user);
+      const result = await agent.chat(session.messages, model, user, reasoning);
       
       // Add assistant response
       const assistantMessage = {
@@ -92,7 +92,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       // Update session with new messages
-      const updatedMessages = [...(session.messages || []), userMessage, assistantMessage];
+      const updatedMessages = [...(session.messages || []), assistantMessage];
       await storage.updateChatSession(session.id, { messages: updatedMessages });
 
       // Add to memory

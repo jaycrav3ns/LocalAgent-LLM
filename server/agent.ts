@@ -23,7 +23,7 @@ export class LocalAgent {
     // this.openRouterApiKeys will be set from user preferences
   }
 
-  async chat(message: string, model?: string, user?: any): Promise<ToolResult> {
+  async chat(messages: { role: string, content: string }[], model?: string, user?: any, reasoning?: { enabled: boolean, effort: string }): Promise<ToolResult> {
     if (user && user.preferences) {
       if (user.preferences.geminiApiKey) {
         this.geminiApiKey = user.preferences.geminiApiKey;
@@ -34,11 +34,11 @@ export class LocalAgent {
     }
 
     if (model && model.startsWith("gemini")) {
-      return this.chatWithGemini(message, model);
+      return this.chatWithGemini(messages, model);
     }
 
     if (model && model.includes('/')) { // A simple way to detect openrouter models
-      return this.chatWithOpenRouter(message, model);
+      return this.chatWithOpenRouter(messages, model, reasoning);
     }
 
     const systemPrompt = `
@@ -57,7 +57,7 @@ Please use these tools to answer the user's questions and perform tasks.
         model: model || this.defaultModel,
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: message }
+          ...messages
         ],
         stream: false
       });
@@ -75,7 +75,7 @@ Please use these tools to answer the user's questions and perform tasks.
     }
   }
 
-  async chatWithOpenRouter(message: string, model: string): Promise<ToolResult> {
+  async chatWithOpenRouter(messages: { role: string, content: string }[], model: string, reasoning?: { enabled: boolean, effort: string }): Promise<ToolResult> {
     if (!this.openRouterApiKeys?.[model]) {
       return {
         success: false,
@@ -88,9 +88,8 @@ Please use these tools to answer the user's questions and perform tasks.
       const response = await axios.post(`https://openrouter.ai/api/v1/chat/completions`,
         {
           model: model,
-          messages: [
-            { role: "user", content: message }
-          ]
+          messages: messages,
+          reasoning: reasoning
         },
         {
           headers: {
@@ -113,7 +112,7 @@ Please use these tools to answer the user's questions and perform tasks.
     }
   }
 
-  async chatWithGemini(message: string, model: string): Promise<ToolResult> {
+  async chatWithGemini(messages: { role: string, content: string }[], model: string): Promise<ToolResult> {
     if (!this.geminiApiKey) {
       return {
         success: false,
@@ -134,18 +133,14 @@ Please use these tools to answer the user's questions and perform tasks.
 `;
 
     try {
+      const contents = messages.map(msg => ({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }]
+      }));
+
       const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
         {
-          contents: [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: message
-                }
-              ]
-            }
-          ],
+          contents: contents,
           system_instruction: {
             parts: [
               {

@@ -1,6 +1,6 @@
 # LocalAgent-LLM
 
-LocalAgent-LLM is a full-stack TypeScript application designed as a powerful local AI assistant. It enables you to chat with a Large Language Model (LLM), execute code, manage files, and leverage custom tools—all from a clean, tabbed web interface.
+LocalAgent-LLM is a full-stack TypeScript application designed as a powerful local AI assistant. It enables you to chat with a Large Language Model (LLM), execute code, manage files, and leverage custom tools. All from a clean, tabbed web interface.
 
 <img width="1325" height="720" alt="01" src="https://github.com/user-attachments/assets/f903c9d6-66b0-4137-a52e-21c173caaf46" />
 
@@ -29,7 +29,7 @@ LocalAgent-LLM is a full-stack TypeScript application designed as a powerful loc
 - **Styling**: TailwindCSS, shadcn/ui, Radix UI, framer-motion, Lucide, FontAwesome
 - **Backend**: Express, TypeScript, REST API, ws (WebSockets)
 - **Database**: PostgreSQL, Drizzle ORM, drizzle-kit migrations
-- **Auth**: passport, passport-local, (OIDC via openid-client)
+- **Auth**: passport, passport-local
 - **Other**: axios, zod, TanStack Query, embla-carousel, recharts, etc.
 
 ---
@@ -44,7 +44,6 @@ LocalAgent-LLM is a full-stack TypeScript application designed as a powerful loc
 ├── shared/          # Shared types & DB schema (TypeScript)
 ├── drizzle/         # Drizzle ORM migration output
 ├── dist/            # Build output (production)
-├── attached_assets/ # Static/extra assets (icons, etc)
 ├── package.json
 ├── tsconfig.json
 ├── tailwind.config.ts
@@ -62,9 +61,11 @@ LocalAgent-LLM is a full-stack TypeScript application designed as a powerful loc
 npm install
 ```
 
-### 2. **Configure Environment**
+### 2. **Configure DB & Environment**
 
-- Copy and edit `.env` for your database, LLM endpoints, OIDC secrets, etc.
+- <a href="https://github.com/jaycrav3ns/LocalAgent-LLM/wiki/Configuring-PostgreSQL">How to setup PostgreSQL</a>
+
+- Edit the `.env` for your database, LLM endpoints, API keys etc.
 
 ### 3. **Run Migrations**
 
@@ -98,7 +99,6 @@ Import paths are aliased for DX:
 
 - `@/components`, `@/lib`, `@/hooks`, etc. → `client/src/...`
 - `@shared/*` → `shared/*`
-- `@assets/*` → `attached_assets/*`
 
 Configured in `tsconfig.json`, `vite.config.ts`, and `components.json`.
 
@@ -117,12 +117,6 @@ Configured in `tsconfig.json`, `vite.config.ts`, and `components.json`.
 - **Drizzle ORM**: Schema in `shared/schema.ts`
 - **Migrations**: `drizzle-kit` CLI (`npm run migrate`)
 - **Config**: See `drizzle.config.ts`
-
----
-
-**Default account:**<br>
- - Username: `user@localhost`<br>
- - Password: `password123`
 
 ---
 
